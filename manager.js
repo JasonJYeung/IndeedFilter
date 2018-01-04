@@ -51,18 +51,36 @@ function saveAndRemoveEntry(event) {
     var currElem = event.path[1];
     var appLink = currElem.childNodes[0].childNodes[1].childNodes[0].childNodes[0].href;
     console.log("Full URL: " + appLink);
-    appLink = extractID(appLink);
-    console.log("ID: " + appLink);
+    var appID = extractID(appLink);
+    console.log("ID: " + appID);
     // Save the ID of the element that we want to remove
-    console.log("Adding candidate to blacklist: " + appLink);
-    window.localStorage.setItem(keyPrefix + appLink, 'true');
+    console.log("Adding candidate to blacklist: " + appID);
+    window.localStorage.setItem(keyPrefix + appID, 'true');
     // window.localStorage.clear();
     console.log(window.localStorage);
-    currElem.remove();
+    replaceButtonWithUndo(event, appLink);
+    currElem.style.opacity = 0.5;
+    //currElem.remove();
+}
+
+function replaceButtonWithUndo(event, URL) {
+    var button = document.createElement("button");
+    var personEntry = event.path[1];
+    event.path[0].remove();
+    button.innerHTML = "Undo Deletion";
+    personEntry.appendChild(button);
+    button.addEventListener ("click", function(event) {
+        //window.open(URL);
+        window.localStorage.removeItem(keyPrefix + extractID(URL));
+        console.log("Undid deletion, should be null: " + window.localStorage.getItem(keyPrefix + extractID(URL)));
+        attachDeletionButton(event.path[1]);
+        event.path[1].style.opacity = "";
+        event.path[0].remove();
+    });
 }
 
 // Extract the ID of the candidate from the given URL.
-// Assumes that it is in the form of https://www.indeed.com/r/41ab6219270bba73?sp=0
+// Assumes that it is in the form of https://www.indeed.com/r/CANDIDATE_NAME/ID?sp=0
 function extractID(URL) {
-    return URL.substr(URL.indexOf("/r/") + 3, 16)
+    return URL.slice(URL.lastIndexOf("/") + 1, -5);
 }
